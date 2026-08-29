@@ -1,0 +1,166 @@
+here<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> 2M STORE </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #111827; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #f97316; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-orange-500 mb-2">   2M Store</h1>
+            
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-2xl">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <span class="text-orange-500">📝</span> لصق رسالة العميل
+                </h2>
+                <textarea 
+                    id="clientMessage" 
+                    rows="10" 
+                    placeholder="انسخ رسالة الواتساب هنا..."
+                    class="w-full bg-gray-900 border border-gray-600 rounded-xl p-4 text-sm focus:border-orange-500 outline-none transition"
+                ></textarea>
+                <button 
+                    onclick="processOrder()" 
+                    class="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl transition shadow-lg"
+                >
+                    استخراج أرقام الهاردات 🚀
+                </button>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-2xl flex flex-col">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <span class="text-green-500">📊</span> النتائج المستخرجة
+                </h2>
+                <div id="loadingStatus" class="text-gray-500 animate-pulse text-center py-10">جاري تحميل الشيت...</div>
+                
+                <div id="orderResults" class="space-y-3 overflow-y-auto max-h-[400px] hidden">
+                    </div>
+
+                <div id="emptyState" class="text-center py-10 text-gray-600 border-2 border-dashed border-gray-700 rounded-xl">
+                    النتائج ستظهر هنا بعد معالجة الرسالة
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-8 bg-gray-800 p-4 rounded-xl border border-gray-700">
+            <input 
+                id="quickSearch" 
+                type="text" 
+                placeholder="بحث سريع عن لعبة واحدة..."
+                class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-right focus:border-blue-500 outline-none"
+            >
+        </div>
+    </div>
+
+    <script>
+        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk9tF0tSMmaPWHfubselfqGO1bpDlOzgq0go1RU2BSI43BaHoaLGjHOHKjYyGA-ywytXmKvQETVJOF/pub?output=csv';
+        let gamesData = [];
+
+        // 1. تحميل الداتا من جوجل شيت
+        Papa.parse(sheetUrl, {
+            download: true,
+            header: false,
+            skipEmptyLines: true,
+            complete: function(results) {
+                const rows = results.data.slice(1); // تجاهل الهيدر
+                gamesData = rows.map(r => ({
+                    name: r[0] ? r[0].toLowerCase().trim() : '',
+                    displayName: r[0],
+                    number: r[1] || '??',
+                    notes: r[2] || ''
+                })).filter(g => g.name.length > 1);
+                
+                document.getElementById('loadingStatus').classList.add('hidden');
+                console.log("Sheet Loaded: " + gamesData.length + " games");
+            }
+        });
+
+        // 2. معالجة الرسالة الكبيرة
+        function processOrder() {
+            const message = document.getElementById('clientMessage').value;
+            if(!message) return alert("انسخ الرسالة أولاً يا شوقي!");
+
+            const orderResults = document.getElementById('orderResults');
+            const emptyState = document.getElementById('emptyState');
+            orderResults.innerHTML = '';
+            
+            // فصص الرسالة لأسطر
+            const lines = message.split('\n');
+            let foundCount = 0;
+
+            lines.forEach(line => {
+                // تنظيف السطر من الأرقام في الأول والنقاط (زي 1. أو 2-)
+                let cleanLine = line.replace(/^\d+[\.\-\)]/, '').trim().toLowerCase();
+                
+                if (cleanLine.length < 3) return; // تجاهل الأسطر القصيرة جداً
+
+                // البحث عن أقرب تطابق في الشيت
+                const match = gamesData.find(g => cleanLine.includes(g.name) || g.name.includes(cleanLine));
+
+                if (match) {
+                    const div = document.createElement('div');
+                    div.className = "flex justify-between items-center bg-gray-900 p-3 rounded-lg border-r-4 border-orange-500 shadow";
+                    div.innerHTML = `
+                        <span class="font-bold text-orange-400 text-lg">${match.number}</span>
+                        <span class="text-sm text-right flex-1 px-3">${match.displayName}</span>
+                        <span class="text-[10px] text-gray-500">${match.notes.substring(0,10)}</span>
+                    `;
+                    orderResults.appendChild(div);
+                    foundCount++;
+                }
+            });
+
+            if(foundCount > 0) {
+                orderResults.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+            } else {
+                alert("لم أستطع التعرف على أسامي الألعاب في الرسالة، تأكد من وجودها في الشيت بنفس الاسم.");
+            }
+        }
+
+        // 3. البحث السريع العادي
+        document.getElementById('quickSearch').addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            const orderResults = document.getElementById('orderResults');
+            const emptyState = document.getElementById('emptyState');
+            
+            if(!q) {
+                orderResults.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            const filtered = gamesData.filter(g => g.name.includes(q)).slice(0, 5);
+            orderResults.innerHTML = '';
+            filtered.forEach(match => {
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center bg-gray-700 p-3 rounded-lg border-r-4 border-blue-500";
+                div.innerHTML = `
+                    <span class="font-bold text-blue-400 text-lg">${match.number}</span>    
+                    <span class="text-sm text-right px-3">${match.displayName}</span>
+                `;
+                orderResults.appendChild(div);
+            });
+            orderResults.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+        });
+    </script>
+</body>
+  </html>
