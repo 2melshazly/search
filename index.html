@@ -7,7 +7,7 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         * { box-sizing: border-box; }
@@ -27,40 +27,44 @@
         /* شكل الورقة داخل الموقع */
         .receipt-preview {
             width: 100%;
-            max-width: 420px;
+            max-width: 400px;
             margin: auto;
             background: #fff;
-            color: #111;
+            color: #000;
             border-radius: 14px;
-            padding: 18px;
+            padding: 16px;
             box-shadow: 0 20px 50px rgba(0,0,0,.35);
         }
 
         .receipt-header {
             text-align: center;
-            border-bottom: 2px dashed #222;
-            padding-bottom: 10px;
+            border-bottom: 2px dashed #000;
+            padding-bottom: 8px;
             margin-bottom: 10px;
         }
 
         .store-name {
-            font-size: 25px;
-            font-weight: 800;
+            font-size: 24px;
+            font-weight: 900;
             letter-spacing: .5px;
+            color: #000;
         }
 
         .receipt-title {
             font-size: 14px;
-            font-weight: 700;
+            font-weight: 800;
             margin-top: 2px;
+            color: #000;
         }
 
         .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 6px 12px;
-            font-size: 12px;
+            gap: 6px 10px;
+            font-size: 13px;
+            font-weight: 700;
             margin-bottom: 10px;
+            color: #000;
         }
 
         .info-item {
@@ -75,54 +79,64 @@
 
         .phone-input {
             border: 0;
-            border-bottom: 1px solid #555;
+            border-bottom: 1px dashed #000;
             outline: 0;
-            width: 145px;
+            width: 160px;
             background: transparent;
             font-family: inherit;
-            font-size: 12px;
+            font-size: 13px;
+            font-weight: 800;
             text-align: right;
+            color: #000;
         }
 
         .games-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 11px;
+            font-size: 12px;
+            color: #000;
         }
 
         .games-table th,
         .games-table td {
-            border-bottom: 1px solid #ddd;
-            padding: 6px 3px;
+            border-bottom: 1px solid #000;
+            padding: 6px 2px;
             vertical-align: middle;
         }
 
         .games-table th {
-            font-weight: 800;
+            font-weight: 900;
             background: #f3f4f6;
+            color: #000;
+            border-top: 1px solid #000;
         }
 
         .games-table .game-name {
             text-align: right;
-            font-weight: 700;
+            font-weight: 800;
+            width: 60%;
         }
 
         .games-table .disk {
             text-align: center;
-            font-weight: 800;
+            font-weight: 900;
             white-space: nowrap;
+            width: 28%;
         }
 
         .games-table .index {
-            width: 25px;
+            width: 12%;
             text-align: center;
+            font-weight: 800;
         }
 
         .totals {
-            border-top: 2px dashed #222;
-            margin-top: 9px;
-            padding-top: 8px;
-            font-size: 12px;
+            border-top: 2px dashed #000;
+            margin-top: 8px;
+            padding-top: 6px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #000;
         }
 
         .total-row {
@@ -133,31 +147,35 @@
         }
 
         .grand-total {
-            font-size: 15px;
-            font-weight: 800;
-            margin-top: 5px;
+            font-size: 16px;
+            font-weight: 900;
+            margin-top: 4px;
         }
 
         .receipt-footer {
-            border-top: 2px dashed #222;
+            border-top: 2px dashed #000;
             margin-top: 10px;
             padding-top: 8px;
             text-align: center;
-            font-size: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #000;
         }
 
+        /* تنسيقات الطباعة المحسّنة للطابعات الحرارية */
         @media print {
             @page {
                 size: 80mm auto;
-                margin: 0;
+                margin: 0mm;
             }
 
             html, body {
-                width: 80mm;
-                min-width: 80mm;
-                background: #fff !important;
+                width: 100%;
                 margin: 0 !important;
                 padding: 0 !important;
+                background: #fff !important;
+                color: #000 !important;
+                -webkit-print-color-adjust: exact;
             }
 
             body * {
@@ -172,32 +190,30 @@
             #printReceipt {
                 display: block !important;
                 position: absolute;
+                left: 0;
                 top: 0;
-                right: 0;
-                width: 80mm;
-                padding: 3mm 4mm;
-                margin: 0;
+                width: 100%;
+                max-width: 78mm;
+                padding: 2mm;
+                margin: 0 auto;
                 background: #fff !important;
                 color: #000 !important;
+                box-shadow: none !important;
+            }
+
+            .receipt-preview {
+                max-width: 100% !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
                 box-shadow: none !important;
                 border-radius: 0 !important;
             }
 
-            .receipt-preview {
-                max-width: none;
-                width: 100%;
-                padding: 0;
-                margin: 0;
-                box-shadow: none;
-                border-radius: 0;
-            }
-
             .phone-input {
-                border-bottom: 1px solid #000;
+                border-bottom: 1px solid #000 !important;
             }
         }
-
-        /* لو الطابعة 58mm غيّر 80mm إلى 58mm في @page و #printReceipt */
     </style>
 </head>
 
@@ -372,25 +388,21 @@
         let gameCount = '';
         let total = '';
 
-        // الاسم: السلام عليكم، أنا عبدالله وائل
         const nameMatch = message.match(/أنا\s+(.+?)(?:\r?\n|$)/i);
         if (nameMatch) {
             customerName = nameMatch[1].trim();
         }
 
-        // الفرع
         const branchMatch = message.match(/الفرع\s*:\s*(.+)/i);
         if (branchMatch) {
             branch = branchMatch[1].trim();
         }
 
-        // عدد الألعاب
         const countMatch = message.match(/عدد\s+الألعاب\s*:\s*(\d+)/i);
         if (countMatch) {
             gameCount = countMatch[1];
         }
 
-        // الإجمالي
         const totalMatch = message.match(/الإجمالي\s*:\s*([\d.,]+)\s*(?:ج\.م|جنيه)?/i);
         if (totalMatch) {
             total = totalMatch[1] + ' ج.م';
@@ -417,14 +429,12 @@
 
         const normalizedLine = normalizeArabic(clean);
 
-        // التطابق الكامل/الاحتواء
         let match = gamesData.find(g =>
             normalizedLine === g.normalized ||
             normalizedLine.includes(g.normalized) ||
             g.normalized.includes(normalizedLine)
         );
 
-        // تطابق الكلمات لو كان الاسم فيه اختلاف بسيط
         if (!match) {
             const words = normalizedLine
                 .split(' ')
@@ -464,7 +474,6 @@
             const match = findGame(line);
 
             if (match) {
-                // منع تكرار نفس السطر لو حصل
                 games.push({
                     displayName: match.displayName,
                     number: match.number,
@@ -547,7 +556,7 @@
                     <thead>
                         <tr>
                             <th class="index">#</th>
-                            <th>اسم اللعبة</th>
+                            <th class="game-name">اسم اللعبة</th>
                             <th class="disk">الهارد</th>
                         </tr>
                     </thead>
@@ -590,7 +599,6 @@
         }
     }
 
-    // عند كتابة رقم الموبايل، حدث المعاينة
     document.getElementById('phoneNumber').addEventListener('input', function() {
         if (currentOrder) {
             renderReceipt(currentOrder);
@@ -607,7 +615,6 @@
             return;
         }
 
-        // آخر تحديث قبل الطباعة
         renderReceipt(currentOrder);
 
         setTimeout(() => {
