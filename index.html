@@ -7,7 +7,7 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         * { box-sizing: border-box; }
@@ -27,12 +27,12 @@
         /* شكل الورقة داخل الموقع */
         .receipt-preview {
             width: 100%;
-            max-width: 400px;
+            max-width: 100%;
             margin: auto;
             background: #fff;
-            color: #000;
+            color: #111;
             border-radius: 14px;
-            padding: 16px;
+            padding: 18px;
             box-shadow: 0 20px 50px rgba(0,0,0,.35);
         }
 
@@ -40,19 +40,19 @@
             text-align: center;
             border-bottom: 2px dashed #000;
             padding-bottom: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .store-name {
-            font-size: 24px;
-            font-weight: 900;
+            font-size: 26px;
+            font-weight: 800;
             letter-spacing: .5px;
             color: #000;
         }
 
         .receipt-title {
-            font-size: 14px;
-            font-weight: 800;
+            font-size: 15px;
+            font-weight: 700;
             margin-top: 2px;
             color: #000;
         }
@@ -60,7 +60,7 @@
         .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 6px 10px;
+            gap: 6px 8px;
             font-size: 13px;
             font-weight: 700;
             margin-bottom: 10px;
@@ -79,13 +79,13 @@
 
         .phone-input {
             border: 0;
-            border-bottom: 1px dashed #000;
+            border-bottom: 1px solid #000;
             outline: 0;
-            width: 160px;
+            width: 100%;
             background: transparent;
             font-family: inherit;
             font-size: 13px;
-            font-weight: 800;
+            font-weight: 700;
             text-align: right;
             color: #000;
         }
@@ -99,33 +99,31 @@
 
         .games-table th,
         .games-table td {
-            border-bottom: 1px solid #000;
+            border-bottom: 1px solid #222;
             padding: 6px 2px;
             vertical-align: middle;
         }
 
         .games-table th {
-            font-weight: 900;
-            background: #f3f4f6;
-            color: #000;
-            border-top: 1px solid #000;
+            font-weight: 800;
+            background: #f0f0f0;
+            font-size: 13px;
         }
 
         .games-table .game-name {
             text-align: right;
-            font-weight: 800;
-            width: 60%;
+            font-weight: 700;
+            word-break: break-word;
         }
 
         .games-table .disk {
             text-align: center;
-            font-weight: 900;
+            font-weight: 800;
             white-space: nowrap;
-            width: 28%;
         }
 
         .games-table .index {
-            width: 12%;
+            width: 20px;
             text-align: center;
             font-weight: 800;
         }
@@ -133,9 +131,9 @@
         .totals {
             border-top: 2px dashed #000;
             margin-top: 8px;
-            padding-top: 6px;
+            padding-top: 8px;
             font-size: 13px;
-            font-weight: 800;
+            font-weight: 700;
             color: #000;
         }
 
@@ -143,13 +141,13 @@
             display: flex;
             justify-content: space-between;
             gap: 10px;
-            margin: 3px 0;
+            margin: 4px 0;
         }
 
         .grand-total {
             font-size: 16px;
-            font-weight: 900;
-            margin-top: 4px;
+            font-weight: 800;
+            margin-top: 5px;
         }
 
         .receipt-footer {
@@ -158,24 +156,24 @@
             padding-top: 8px;
             text-align: center;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 700;
             color: #000;
         }
 
-        /* تنسيقات الطباعة المحسّنة للطابعات الحرارية */
+        /* تنسيقات الطباعة الخاصة بالطابعات الحرارية (80mm) */
         @media print {
             @page {
                 size: 80mm auto;
-                margin: 0mm;
+                margin: 0;
             }
 
             html, body {
-                width: 100%;
+                width: 100% !important;
+                min-width: 100% !important;
+                background: #fff !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                background: #fff !important;
                 color: #000 !important;
-                -webkit-print-color-adjust: exact;
             }
 
             body * {
@@ -190,15 +188,16 @@
             #printReceipt {
                 display: block !important;
                 position: absolute;
-                left: 0;
                 top: 0;
-                width: 100%;
-                max-width: 78mm;
-                padding: 2mm;
-                margin: 0 auto;
+                left: 0;
+                right: 0;
+                width: 100% !important;
+                padding: 1mm 2mm !important;
+                margin: 0 !important;
                 background: #fff !important;
                 color: #000 !important;
                 box-shadow: none !important;
+                border-radius: 0 !important;
             }
 
             .receipt-preview {
@@ -316,9 +315,6 @@
     let gamesData = [];
     let currentOrder = null;
 
-    // =========================
-    // أدوات تنظيف النص
-    // =========================
     function normalizeArabic(text) {
         return String(text || '')
             .toLowerCase()
@@ -341,9 +337,6 @@
             .replace(/'/g, '&#039;');
     }
 
-    // =========================
-    // تحميل Google Sheet
-    // =========================
     Papa.parse(sheetUrl, {
         download: true,
         header: false,
@@ -362,8 +355,6 @@
 
             document.getElementById('sheetStatus').innerHTML =
                 `✅ تم تحميل <b>${gamesData.length}</b> لعبة من الشيت`;
-
-            console.log('Sheet Loaded:', gamesData.length);
         },
 
         error: function(error) {
@@ -373,11 +364,7 @@
         }
     });
 
-    // =========================
-    // استخراج بيانات الرسالة
-    // =========================
     function parseCustomerMessage(message) {
-
         const lines = message
             .split(/\r?\n/)
             .map(x => x.trim())
@@ -388,22 +375,22 @@
         let gameCount = '';
         let total = '';
 
-        const nameMatch = message.match(/أنا\s+(.+?)(?:\r?\n|$)/i);
+        const nameMatch = message.match(/(?:أنا|العميل|الاسم)\s*[:\-]?\s*(.+?)(?:\r?\n|$)/i);
         if (nameMatch) {
             customerName = nameMatch[1].trim();
         }
 
-        const branchMatch = message.match(/الفرع\s*:\s*(.+)/i);
+        const branchMatch = message.match(/الفرع\s*[:\-]?\s*(.+?)(?:\r?\n|$)/i);
         if (branchMatch) {
             branch = branchMatch[1].trim();
         }
 
-        const countMatch = message.match(/عدد\s+الألعاب\s*:\s*(\d+)/i);
+        const countMatch = message.match(/عدد\s+الألعاب\s*[:\-]?\s*(\d+)/i);
         if (countMatch) {
             gameCount = countMatch[1];
         }
 
-        const totalMatch = message.match(/الإجمالي\s*:\s*([\d.,]+)\s*(?:ج\.م|جنيه)?/i);
+        const totalMatch = message.match(/الإجمالي\s*[:\-]?\s*([\d.,]+)\s*(?:ج\.م|جنيه)?/i);
         if (totalMatch) {
             total = totalMatch[1] + ' ج.م';
         }
@@ -417,15 +404,12 @@
         };
     }
 
-    // =========================
-    // إيجاد اللعبة في الشيت
-    // =========================
     function findGame(line) {
         let clean = line
             .replace(/^\s*\d+\s*[\.\-\)]\s*/, '')
             .trim();
 
-        if (clean.length < 3) return null;
+        if (clean.length < 2) return null;
 
         const normalizedLine = normalizeArabic(clean);
 
@@ -443,18 +427,14 @@
             match = gamesData.find(g => {
                 const gameWords = g.normalized.split(' ').filter(w => w.length >= 3);
                 const found = words.filter(w => gameWords.some(gw => gw.includes(w) || w.includes(gw)));
-                return words.length >= 2 && found.length >= Math.min(2, words.length);
+                return words.length >= 1 && found.length >= Math.min(2, words.length);
             });
         }
 
         return match || null;
     }
 
-    // =========================
-    // معالجة الطلب
-    // =========================
     function processOrder() {
-
         const message = document.getElementById('clientMessage').value.trim();
 
         if (!message) {
@@ -469,11 +449,13 @@
 
         const info = parseCustomerMessage(message);
         const games = [];
+        const addedNames = new Set();
 
         info.lines.forEach(line => {
             const match = findGame(line);
 
-            if (match) {
+            if (match && !addedNames.has(match.displayName)) {
+                addedNames.add(match.displayName);
                 games.push({
                     displayName: match.displayName,
                     number: match.number,
@@ -502,14 +484,16 @@
         document.getElementById('printButton').disabled = false;
     }
 
-    // =========================
-    // بناء الورقة
-    // =========================
     function receiptHTML(order) {
-
         const phone = document.getElementById('phoneNumber').value.trim();
 
         const rows = order.games.map((game, index) => `
+            <tr>
+                <td class="index">${index + 1}</td>
+                <td class="game-name">${escapeHTML(game.displayName)}</td>
+                <td class="disk">${escapeHTML(game.number)}</td>
+            </tr>
+        `).join me? `
             <tr>
                 <td class="index">${index + 1}</td>
                 <td class="game-name">${escapeHTML(game.displayName)}</td>
@@ -519,7 +503,6 @@
 
         return `
             <div class="receipt-preview">
-
                 <div class="receipt-header">
                     <div class="store-name">2M ElSHAZLY</div>
                     <div class="receipt-title">طلب تجهيز ألعاب بلايستيشن</div>
@@ -556,7 +539,7 @@
                     <thead>
                         <tr>
                             <th class="index">#</th>
-                            <th class="game-name">اسم اللعبة</th>
+                            <th>اسم اللعبة</th>
                             <th class="disk">الهارد</th>
                         </tr>
                     </thead>
@@ -581,7 +564,6 @@
                     2M ElSHAZLY<br>
                     شكراً لتعاملكم معنا
                 </div>
-
             </div>
         `;
     }
@@ -593,7 +575,6 @@
 
     function syncPhone(value) {
         document.getElementById('phoneNumber').value = value;
-
         if (currentOrder) {
             renderReceipt(currentOrder);
         }
@@ -605,16 +586,11 @@
         }
     });
 
-    // =========================
-    // الطباعة
-    // =========================
     function printReceipt() {
-
         if (!currentOrder) {
             alert('جهز الطلب أولاً.');
             return;
         }
-
         renderReceipt(currentOrder);
 
         setTimeout(() => {
@@ -622,16 +598,11 @@
         }, 150);
     }
 
-    // =========================
-    // البحث السريع
-    // =========================
     document.getElementById('quickSearch').addEventListener('input', function(e) {
-
         const q = normalizeArabic(e.target.value);
         const box = document.getElementById('quickResults');
 
         box.innerHTML = '';
-
         if (!q) return;
 
         const filtered = gamesData
@@ -645,10 +616,7 @@
 
         filtered.forEach(game => {
             const div = document.createElement('div');
-
-            div.className =
-                'bg-gray-900 border border-gray-700 rounded-xl p-3 flex items-center justify-between gap-3';
-
+            div.className = 'bg-gray-900 border border-gray-700 rounded-xl p-3 flex items-center justify-between gap-3';
             div.innerHTML = `
                 <span class="font-bold text-blue-400">
                     هارد ${escapeHTML(game.number)}
@@ -657,7 +625,6 @@
                     ${escapeHTML(game.displayName)}
                 </span>
             `;
-
             box.appendChild(div);
         });
     });
