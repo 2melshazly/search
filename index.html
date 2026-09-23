@@ -179,8 +179,6 @@
 
         /* =========================================================
            طباعة حرارية 80mm
-           مهم: لا يوجد max-width أو margin أو padding جانبي
-           حتى تستفيد الفاتورة من كامل عرض الورقة.
            ========================================================= */
         @media print {
             @page {
@@ -225,7 +223,8 @@
                 min-width: 80mm !important;
                 max-width: 80mm !important;
                 margin: 0 !important;
-                padding: 0 !important;
+                /* مسافة أمان علوية عشان القاطعة متقصش اسم المحل */
+                padding: 8mm 0 0 0 !important;
                 background: #fff !important;
                 color: #000 !important;
                 box-shadow: none !important;
