@@ -1,166 +1,660 @@
-here<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> 2M STORE </title>
+    <title>2M ElSHAZLY - تجهيز طلب الألعاب</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Cairo', sans-serif; }
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Cairo', Tahoma, Arial, sans-serif;
+            background: #0b1120;
+        }
+
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #111827; }
         ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #f97316; }
-    </style>
-</head>
-<body class="bg-gray-900 text-white min-h-screen p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-orange-500 mb-2">   2M Store</h1>
-            
-        </div>
+        .print-only { display: none; }
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-2xl">
-                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                    <span class="text-orange-500">📝</span> لصق رسالة العميل
-                </h2>
-                <textarea 
-                    id="clientMessage" 
-                    rows="10" 
-                    placeholder="انسخ رسالة الواتساب هنا..."
-                    class="w-full bg-gray-900 border border-gray-600 rounded-xl p-4 text-sm focus:border-orange-500 outline-none transition"
-                ></textarea>
-                <button 
-                    onclick="processOrder()" 
-                    class="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl transition shadow-lg"
-                >
-                    استخراج أرقام الهاردات 🚀
-                </button>
-            </div>
+        /* شكل الورقة داخل الموقع */
+        .receipt-preview {
+            width: 100%;
+            max-width: 420px;
+            margin: auto;
+            background: #fff;
+            color: #111;
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 20px 50px rgba(0,0,0,.35);
+        }
 
-            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-2xl flex flex-col">
-                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                    <span class="text-green-500">📊</span> النتائج المستخرجة
-                </h2>
-                <div id="loadingStatus" class="text-gray-500 animate-pulse text-center py-10">جاري تحميل الشيت...</div>
-                
-                <div id="orderResults" class="space-y-3 overflow-y-auto max-h-[400px] hidden">
-                    </div>
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed #222;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
 
-                <div id="emptyState" class="text-center py-10 text-gray-600 border-2 border-dashed border-gray-700 rounded-xl">
-                    النتائج ستظهر هنا بعد معالجة الرسالة
-                </div>
-            </div>
+        .store-name {
+            font-size: 25px;
+            font-weight: 800;
+            letter-spacing: .5px;
+        }
 
-        </div>
+        .receipt-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
 
-        <div class="mt-8 bg-gray-800 p-4 rounded-xl border border-gray-700">
-            <input 
-                id="quickSearch" 
-                type="text" 
-                placeholder="بحث سريع عن لعبة واحدة..."
-                class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-right focus:border-blue-500 outline-none"
-            >
-        </div>
-    </div>
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 12px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
 
-    <script>
-        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk9tF0tSMmaPWHfubselfqGO1bpDlOzgq0go1RU2BSI43BaHoaLGjHOHKjYyGA-ywytXmKvQETVJOF/pub?output=csv';
-        let gamesData = [];
+        .info-item {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
 
-        // 1. تحميل الداتا من جوجل شيت
-        Papa.parse(sheetUrl, {
-            download: true,
-            header: false,
-            skipEmptyLines: true,
-            complete: function(results) {
-                const rows = results.data.slice(1); // تجاهل الهيدر
-                gamesData = rows.map(r => ({
-                    name: r[0] ? r[0].toLowerCase().trim() : '',
-                    displayName: r[0],
-                    number: r[1] || '??',
-                    notes: r[2] || ''
-                })).filter(g => g.name.length > 1);
-                
-                document.getElementById('loadingStatus').classList.add('hidden');
-                console.log("Sheet Loaded: " + gamesData.length + " games");
+        .info-item.full {
+            grid-column: 1 / -1;
+        }
+
+        .phone-input {
+            border: 0;
+            border-bottom: 1px solid #555;
+            outline: 0;
+            width: 145px;
+            background: transparent;
+            font-family: inherit;
+            font-size: 12px;
+            text-align: right;
+        }
+
+        .games-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .games-table th,
+        .games-table td {
+            border-bottom: 1px solid #ddd;
+            padding: 6px 3px;
+            vertical-align: middle;
+        }
+
+        .games-table th {
+            font-weight: 800;
+            background: #f3f4f6;
+        }
+
+        .games-table .game-name {
+            text-align: right;
+            font-weight: 700;
+        }
+
+        .games-table .disk {
+            text-align: center;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .games-table .index {
+            width: 25px;
+            text-align: center;
+        }
+
+        .totals {
+            border-top: 2px dashed #222;
+            margin-top: 9px;
+            padding-top: 8px;
+            font-size: 12px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 3px 0;
+        }
+
+        .grand-total {
+            font-size: 15px;
+            font-weight: 800;
+            margin-top: 5px;
+        }
+
+        .receipt-footer {
+            border-top: 2px dashed #222;
+            margin-top: 10px;
+            padding-top: 8px;
+            text-align: center;
+            font-size: 10px;
+        }
+
+        @media print {
+            @page {
+                size: 80mm auto;
+                margin: 0;
             }
-        });
 
-        // 2. معالجة الرسالة الكبيرة
-        function processOrder() {
-            const message = document.getElementById('clientMessage').value;
-            if(!message) return alert("انسخ الرسالة أولاً يا شوقي!");
+            html, body {
+                width: 80mm;
+                min-width: 80mm;
+                background: #fff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
 
-            const orderResults = document.getElementById('orderResults');
-            const emptyState = document.getElementById('emptyState');
-            orderResults.innerHTML = '';
-            
-            // فصص الرسالة لأسطر
-            const lines = message.split('\n');
-            let foundCount = 0;
+            body * {
+                visibility: hidden !important;
+            }
 
-            lines.forEach(line => {
-                // تنظيف السطر من الأرقام في الأول والنقاط (زي 1. أو 2-)
-                let cleanLine = line.replace(/^\d+[\.\-\)]/, '').trim().toLowerCase();
-                
-                if (cleanLine.length < 3) return; // تجاهل الأسطر القصيرة جداً
+            #printReceipt,
+            #printReceipt * {
+                visibility: visible !important;
+            }
 
-                // البحث عن أقرب تطابق في الشيت
-                const match = gamesData.find(g => cleanLine.includes(g.name) || g.name.includes(cleanLine));
+            #printReceipt {
+                display: block !important;
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 80mm;
+                padding: 3mm 4mm;
+                margin: 0;
+                background: #fff !important;
+                color: #000 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
 
-                if (match) {
-                    const div = document.createElement('div');
-                    div.className = "flex justify-between items-center bg-gray-900 p-3 rounded-lg border-r-4 border-orange-500 shadow";
-                    div.innerHTML = `
-                        <span class="font-bold text-orange-400 text-lg">${match.number}</span>
-                        <span class="text-sm text-right flex-1 px-3">${match.displayName}</span>
-                        <span class="text-[10px] text-gray-500">${match.notes.substring(0,10)}</span>
-                    `;
-                    orderResults.appendChild(div);
-                    foundCount++;
-                }
-            });
+            .receipt-preview {
+                max-width: none;
+                width: 100%;
+                padding: 0;
+                margin: 0;
+                box-shadow: none;
+                border-radius: 0;
+            }
 
-            if(foundCount > 0) {
-                orderResults.classList.remove('hidden');
-                emptyState.classList.add('hidden');
-            } else {
-                alert("لم أستطع التعرف على أسامي الألعاب في الرسالة، تأكد من وجودها في الشيت بنفس الاسم.");
+            .phone-input {
+                border-bottom: 1px solid #000;
             }
         }
 
-        // 3. البحث السريع العادي
-        document.getElementById('quickSearch').addEventListener('input', (e) => {
-            const q = e.target.value.toLowerCase();
-            const orderResults = document.getElementById('orderResults');
-            const emptyState = document.getElementById('emptyState');
-            
-            if(!q) {
-                orderResults.classList.add('hidden');
-                emptyState.classList.remove('hidden');
-                return;
-            }
+        /* لو الطابعة 58mm غيّر 80mm إلى 58mm في @page و #printReceipt */
+    </style>
+</head>
 
-            const filtered = gamesData.filter(g => g.name.includes(q)).slice(0, 5);
-            orderResults.innerHTML = '';
-            filtered.forEach(match => {
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-center bg-gray-700 p-3 rounded-lg border-r-4 border-blue-500";
-                div.innerHTML = `
-                    <span class="font-bold text-blue-400 text-lg">${match.number}</span>    
-                    <span class="text-sm text-right px-3">${match.displayName}</span>
-                `;
-                orderResults.appendChild(div);
+<body class="text-white min-h-screen p-4 md:p-8">
+
+<div class="max-w-6xl mx-auto">
+
+    <div class="text-center mb-7">
+        <div class="text-3xl font-extrabold text-orange-500">2M ElSHAZLY</div>
+        <div class="text-gray-400 mt-1">تجهيز وطباعة طلب ألعاب العميل</div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- إدخال الطلب -->
+        <div class="bg-gray-800 p-5 md:p-6 rounded-2xl border border-gray-700 shadow-2xl">
+            <h2 class="text-lg font-bold mb-4">
+                📝 لصق رسالة العميل
+            </h2>
+
+            <textarea
+                id="clientMessage"
+                rows="12"
+                placeholder="انسخ رسالة الواتساب هنا..."
+                class="w-full bg-gray-900 border border-gray-600 rounded-xl p-4 text-sm text-white focus:border-orange-500 outline-none transition"
+            ></textarea>
+
+            <button
+                onclick="processOrder()"
+                class="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl transition shadow-lg"
+            >
+                استخراج الطلب وتجهيز الورقة 🚀
+            </button>
+
+            <div id="sheetStatus" class="text-sm text-gray-400 mt-3 text-center">
+                جاري تحميل بيانات الألعاب من Google Sheet...
+            </div>
+
+            <div class="mt-6 border-t border-gray-700 pt-5">
+                <h3 class="font-bold mb-3">📞 رقم موبايل العميل</h3>
+                <input
+                    id="phoneNumber"
+                    type="text"
+                    inputmode="tel"
+                    placeholder="اكتب رقم الموبايل هنا قبل الطباعة"
+                    class="w-full bg-gray-900 border border-gray-600 rounded-xl p-3 text-white outline-none focus:border-orange-500"
+                >
+            </div>
+
+            <div class="mt-4">
+                <button
+                    onclick="printReceipt()"
+                    id="printButton"
+                    disabled
+                    class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition"
+                >
+                    🖨️ طباعة الطلب
+                </button>
+            </div>
+        </div>
+
+        <!-- المعاينة -->
+        <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-2xl">
+            <h2 class="text-lg font-bold mb-4">
+                🧾 معاينة ورقة الطباعة
+            </h2>
+
+            <div id="emptyState" class="text-center py-16 text-gray-500 border-2 border-dashed border-gray-700 rounded-xl">
+                الصق رسالة العميل ثم اضغط<br>
+                <b class="text-orange-400">استخراج الطلب وتجهيز الورقة</b>
+            </div>
+
+            <div id="previewContainer" class="hidden">
+                <div id="receiptPreview" class="receipt-preview"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- البحث السريع -->
+    <div class="mt-6 bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-2xl">
+        <h2 class="font-bold mb-3">🔎 بحث سريع عن لعبة</h2>
+        <input
+            id="quickSearch"
+            type="text"
+            placeholder="اكتب اسم اللعبة..."
+            class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-right focus:border-blue-500 outline-none"
+        >
+        <div id="quickResults" class="mt-3 space-y-2"></div>
+    </div>
+
+</div>
+
+<!-- النسخة التي ستظهر للطباعة فقط -->
+<div id="printReceipt" class="print-only"></div>
+
+<script>
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk9tF0tSMmaPWHfubselfqGO1bpDlOzgq0go1RU2BSI43BaHoaLGjHOHKjYyGA-ywytXmKvQETVJOF/pub?output=csv';
+
+    let gamesData = [];
+    let currentOrder = null;
+
+    // =========================
+    // أدوات تنظيف النص
+    // =========================
+    function normalizeArabic(text) {
+        return String(text || '')
+            .toLowerCase()
+            .replace(/[أإآ]/g, 'ا')
+            .replace(/ة/g, 'ه')
+            .replace(/ى/g, 'ي')
+            .replace(/ؤ/g, 'و')
+            .replace(/ئ/g, 'ي')
+            .replace(/[ًٌٍَُِّْـ]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function escapeHTML(text) {
+        return String(text ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    // =========================
+    // تحميل Google Sheet
+    // =========================
+    Papa.parse(sheetUrl, {
+        download: true,
+        header: false,
+        skipEmptyLines: true,
+
+        complete: function(results) {
+            const rows = results.data.slice(1);
+
+            gamesData = rows.map(r => ({
+                name: r[0] ? String(r[0]).trim() : '',
+                normalized: normalizeArabic(r[0]),
+                displayName: r[0] ? String(r[0]).trim() : '',
+                number: r[1] ? String(r[1]).trim() : 'غير محدد',
+                notes: r[2] ? String(r[2]).trim() : ''
+            })).filter(g => g.normalized.length > 1);
+
+            document.getElementById('sheetStatus').innerHTML =
+                `✅ تم تحميل <b>${gamesData.length}</b> لعبة من الشيت`;
+
+            console.log('Sheet Loaded:', gamesData.length);
+        },
+
+        error: function(error) {
+            document.getElementById('sheetStatus').innerHTML =
+                '❌ حدثت مشكلة في تحميل Google Sheet';
+            console.error(error);
+        }
+    });
+
+    // =========================
+    // استخراج بيانات الرسالة
+    // =========================
+    function parseCustomerMessage(message) {
+
+        const lines = message
+            .split(/\r?\n/)
+            .map(x => x.trim())
+            .filter(Boolean);
+
+        let customerName = '';
+        let branch = '';
+        let gameCount = '';
+        let total = '';
+
+        // الاسم: السلام عليكم، أنا عبدالله وائل
+        const nameMatch = message.match(/أنا\s+(.+?)(?:\r?\n|$)/i);
+        if (nameMatch) {
+            customerName = nameMatch[1].trim();
+        }
+
+        // الفرع
+        const branchMatch = message.match(/الفرع\s*:\s*(.+)/i);
+        if (branchMatch) {
+            branch = branchMatch[1].trim();
+        }
+
+        // عدد الألعاب
+        const countMatch = message.match(/عدد\s+الألعاب\s*:\s*(\d+)/i);
+        if (countMatch) {
+            gameCount = countMatch[1];
+        }
+
+        // الإجمالي
+        const totalMatch = message.match(/الإجمالي\s*:\s*([\d.,]+)\s*(?:ج\.م|جنيه)?/i);
+        if (totalMatch) {
+            total = totalMatch[1] + ' ج.م';
+        }
+
+        return {
+            customerName,
+            branch,
+            gameCount,
+            total,
+            lines
+        };
+    }
+
+    // =========================
+    // إيجاد اللعبة في الشيت
+    // =========================
+    function findGame(line) {
+        let clean = line
+            .replace(/^\s*\d+\s*[\.\-\)]\s*/, '')
+            .trim();
+
+        if (clean.length < 3) return null;
+
+        const normalizedLine = normalizeArabic(clean);
+
+        // التطابق الكامل/الاحتواء
+        let match = gamesData.find(g =>
+            normalizedLine === g.normalized ||
+            normalizedLine.includes(g.normalized) ||
+            g.normalized.includes(normalizedLine)
+        );
+
+        // تطابق الكلمات لو كان الاسم فيه اختلاف بسيط
+        if (!match) {
+            const words = normalizedLine
+                .split(' ')
+                .filter(w => w.length >= 3);
+
+            match = gamesData.find(g => {
+                const gameWords = g.normalized.split(' ').filter(w => w.length >= 3);
+                const found = words.filter(w => gameWords.some(gw => gw.includes(w) || w.includes(gw)));
+                return words.length >= 2 && found.length >= Math.min(2, words.length);
             });
-            orderResults.classList.remove('hidden');
-            emptyState.classList.add('hidden');
+        }
+
+        return match || null;
+    }
+
+    // =========================
+    // معالجة الطلب
+    // =========================
+    function processOrder() {
+
+        const message = document.getElementById('clientMessage').value.trim();
+
+        if (!message) {
+            alert('انسخ رسالة العميل أولاً.');
+            return;
+        }
+
+        if (!gamesData.length) {
+            alert('بيانات الألعاب لم تكتمل من Google Sheet بعد. انتظر ثواني وحاول مرة أخرى.');
+            return;
+        }
+
+        const info = parseCustomerMessage(message);
+        const games = [];
+
+        info.lines.forEach(line => {
+            const match = findGame(line);
+
+            if (match) {
+                // منع تكرار نفس السطر لو حصل
+                games.push({
+                    displayName: match.displayName,
+                    number: match.number,
+                    notes: match.notes
+                });
+            }
         });
-    </script>
+
+        if (!games.length) {
+            alert('لم أستطع التعرف على الألعاب. تأكد أن أسماء الألعاب موجودة في Google Sheet.');
+            return;
+        }
+
+        currentOrder = {
+            customerName: info.customerName || 'غير محدد',
+            branch: info.branch || 'غير محدد',
+            gameCount: info.gameCount || String(games.length),
+            total: info.total || 'غير محدد',
+            games: games
+        };
+
+        renderReceipt(currentOrder);
+
+        document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('previewContainer').classList.remove('hidden');
+        document.getElementById('printButton').disabled = false;
+    }
+
+    // =========================
+    // بناء الورقة
+    // =========================
+    function receiptHTML(order) {
+
+        const phone = document.getElementById('phoneNumber').value.trim();
+
+        const rows = order.games.map((game, index) => `
+            <tr>
+                <td class="index">${index + 1}</td>
+                <td class="game-name">${escapeHTML(game.displayName)}</td>
+                <td class="disk">${escapeHTML(game.number)}</td>
+            </tr>
+        `).join('');
+
+        return `
+            <div class="receipt-preview">
+
+                <div class="receipt-header">
+                    <div class="store-name">2M ElSHAZLY</div>
+                    <div class="receipt-title">طلب تجهيز ألعاب بلايستيشن</div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item full">
+                        <b>العميل:</b>
+                        <span>${escapeHTML(order.customerName)}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <b>الفرع:</b>
+                        <span>${escapeHTML(order.branch)}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <b>عدد الألعاب:</b>
+                        <span>${escapeHTML(order.gameCount)}</span>
+                    </div>
+
+                    <div class="info-item full">
+                        <b>الموبايل:</b>
+                        <input
+                            class="phone-input"
+                            value="${escapeHTML(phone)}"
+                            placeholder="........................"
+                            oninput="syncPhone(this.value)"
+                        >
+                    </div>
+                </div>
+
+                <table class="games-table">
+                    <thead>
+                        <tr>
+                            <th class="index">#</th>
+                            <th>اسم اللعبة</th>
+                            <th class="disk">الهارد</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+
+                <div class="totals">
+                    <div class="total-row">
+                        <span>عدد الألعاب</span>
+                        <b>${escapeHTML(order.gameCount)}</b>
+                    </div>
+
+                    <div class="total-row grand-total">
+                        <span>الإجمالي</span>
+                        <span>${escapeHTML(order.total)}</span>
+                    </div>
+                </div>
+
+                <div class="receipt-footer">
+                    2M ElSHAZLY<br>
+                    شكراً لتعاملكم معنا
+                </div>
+
+            </div>
+        `;
+    }
+
+    function renderReceipt(order) {
+        document.getElementById('receiptPreview').innerHTML = receiptHTML(order);
+        document.getElementById('printReceipt').innerHTML = receiptHTML(order);
+    }
+
+    function syncPhone(value) {
+        document.getElementById('phoneNumber').value = value;
+
+        if (currentOrder) {
+            renderReceipt(currentOrder);
+        }
+    }
+
+    // عند كتابة رقم الموبايل، حدث المعاينة
+    document.getElementById('phoneNumber').addEventListener('input', function() {
+        if (currentOrder) {
+            renderReceipt(currentOrder);
+        }
+    });
+
+    // =========================
+    // الطباعة
+    // =========================
+    function printReceipt() {
+
+        if (!currentOrder) {
+            alert('جهز الطلب أولاً.');
+            return;
+        }
+
+        // آخر تحديث قبل الطباعة
+        renderReceipt(currentOrder);
+
+        setTimeout(() => {
+            window.print();
+        }, 150);
+    }
+
+    // =========================
+    // البحث السريع
+    // =========================
+    document.getElementById('quickSearch').addEventListener('input', function(e) {
+
+        const q = normalizeArabic(e.target.value);
+        const box = document.getElementById('quickResults');
+
+        box.innerHTML = '';
+
+        if (!q) return;
+
+        const filtered = gamesData
+            .filter(g => g.normalized.includes(q))
+            .slice(0, 10);
+
+        if (!filtered.length) {
+            box.innerHTML = '<div class="text-gray-500 text-sm">لا توجد نتائج.</div>';
+            return;
+        }
+
+        filtered.forEach(game => {
+            const div = document.createElement('div');
+
+            div.className =
+                'bg-gray-900 border border-gray-700 rounded-xl p-3 flex items-center justify-between gap-3';
+
+            div.innerHTML = `
+                <span class="font-bold text-blue-400">
+                    هارد ${escapeHTML(game.number)}
+                </span>
+                <span class="text-sm text-right flex-1">
+                    ${escapeHTML(game.displayName)}
+                </span>
+            `;
+
+            box.appendChild(div);
+        });
+    });
+</script>
+
 </body>
-  </html>
+</html>
